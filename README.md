@@ -1,4 +1,2 @@
 # project
-lkdgvaldvlasdkct
-sdvnsdkvsd vd
-sdm sd;msdlk;vsdmsk
+BUILDING A GUI SLOT_MACHIEN GAME 
