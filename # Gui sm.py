@@ -3,18 +3,22 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel ,QPushButton,QLineEdit
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon, QFont
+from highest_bet_won import *
 from cash_back import *
+import threading
 import time
 import random
 
 class MainWindow(QMainWindow):
     def __init__(self):  
         super().__init__()  
+        
         self.setWindowTitle("Slot Machine V") 
         self.setGeometry(600, 400, 900, 600)
         self.balance=100
         self.bet = 0
         self.betted = 0
+        self.highest_bet = 0
         self.lable5=QLabel("",self)
 
         
@@ -25,7 +29,8 @@ class MainWindow(QMainWindow):
         self.label1=QLabel(f"{self.balance}$",self)
         self.label3=QLabel("",self)
         self.line = QLineEdit("10",self)
-        self.lable4 = QLabel(f"{0:.2f}",self)
+        self.lable6 = QLabel(show_high_score(),self)
+        self.lable4 = QLabel("0$",self)
 
         
         self.timer = QTimer(self)
@@ -44,7 +49,7 @@ class MainWindow(QMainWindow):
         self.lable5.setGeometry(0,0,900,600)
         self.label0.setGeometry(0,0,900,100)
         self.label1.setGeometry(775,20,100,50)
-        self.label2.setGeometry(250,150,400,300)
+        self.label2.setGeometry(250,170,400,300)
         self.line.setGeometry(0,100,100,40)
         self.label2.setStyleSheet("font-size: 60px;"
                             "background-color: silver;"
@@ -53,6 +58,7 @@ class MainWindow(QMainWindow):
                             "border-radius: 15px;")#curved border
         self.label3.setGeometry(0,500,900,100)
         self.lable4.setGeometry(800,100,100,40)
+        self.lable6.setGeometry(100,100,700,40)
 
         self.label1.setStyleSheet("font-size: 30px;"
                             "background-color: black;"
@@ -68,6 +74,9 @@ class MainWindow(QMainWindow):
                             "background-color: #11081f;"
                             )
         self.label0.setStyleSheet("font-size: 40px;"
+                            "background-color: silver;"
+                            "Color : black")
+        self.lable6.setStyleSheet("font-size: 30px;"
                             "background-color: silver;"
                             "Color : black")
         
@@ -87,6 +96,7 @@ class MainWindow(QMainWindow):
         self.label2.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.label3.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.line.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.lable6.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.line.textChanged.connect(self.set_bet)
         
     def set_bet(self):
@@ -136,6 +146,11 @@ class MainWindow(QMainWindow):
                 self.balance += cash_back(self.a,self.betted)
                 self.label1.setText(f"{self.balance}$")
 
+                if cash_back(self.a,self.betted) > self.highest_bet:
+                    self.highest_bet = cash_back(self.a,self.betted)
+                
+                
+
             else:
                 self.label3.setText("You lost! 😢")
                 self.label3.setStyleSheet("font-size: 40px;"
@@ -147,6 +162,16 @@ class MainWindow(QMainWindow):
             
             if self.balance == 0:
                 self.button.setText("Restart")
+                if self.highest_bet > 0:
+                    self.button.setEnabled(False)
+                    write_high_score(self.highest_bet)
+                    # Update highscore label
+                    self.lable6.setText(show_high_score())
+                    self.button.setEnabled(True)
+                
+            
+
+            
                 
 
             
@@ -177,6 +202,9 @@ class MainWindow(QMainWindow):
         else:
             self.spin()
             self.balance -= self.betted
+            
+        
+        
             
 
 
