@@ -1,7 +1,8 @@
 import json
-import sys  
+import sys, os
 from PyQt5.QtWidgets import QApplication, QMainWindow ,QPushButton,QLineEdit,QLabel
 from PyQt5.QtCore import Qt, pyqtSignal, QEventLoop
+
 
 
 file_path= "highscore.json"
@@ -9,7 +10,7 @@ file_path= "highscore.json"
 
 reset ={"name" : 0}
 
-class MainWindow(QMainWindow):
+class HighscoreWindow(QMainWindow):
     closed = pyqtSignal() #pyqtSignal is used to send a signal to the main window when the highscore window is closed ( this helps the other thread to know that the highscore window is closed and it can continue)
 
     def __init__(self):  
@@ -53,11 +54,25 @@ class MainWindow(QMainWindow):
         
 
 
-def write_high_score(score):
-    high_score ={"name" : 0}
-    with open(file_path, 'r') as file:
-        high_score = json.load(file)
+def load_high_score():
+    default_score = {"name": 0}
+    try:
+        with open(file_path, 'r') as file:
+            high_score = json.load(file)
+            if not isinstance(high_score, dict) or not high_score:
+                raise ValueError("Invalid format")
+            return high_score
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        try:
+            with open(file_path, "w") as file:
+                json.dump(default_score, file, indent=4)
+        except Exception:
+            pass
+        return default_score
 
+
+def write_high_score(score):
+    high_score = load_high_score()
 
     for i in high_score.values():
 
@@ -66,7 +81,7 @@ def write_high_score(score):
                 app = QApplication.instance() #this is to prevent the error of creating multiple instances of the application
                 if not app: #if there is no instance of the application, create one
                     app = QApplication(sys.argv)  
-                window = MainWindow()  
+                window = HighscoreWindow()  
                 window.show()  
                 
                 loop = QEventLoop() #this is to prevent the error of creating multiple instances of the application
@@ -78,8 +93,7 @@ def write_high_score(score):
                 new_high_score = {name : score}
                 with open(file_path,"w") as file:
                     json.dump(new_high_score,file,indent=4)
-                with open(file_path, 'r') as file:
-                    high_score = json.load(file)
+                high_score = new_high_score
                 break
             else:
                 break
@@ -87,11 +101,24 @@ def write_high_score(score):
     return high_score        
     
 def show_high_score():
-    with open(file_path, 'r') as file:
-        high_score = json.load(file)
+    high_score = load_high_score()
     a=list(high_score.values())
     b=list(high_score.keys())
     return f"current high score is {a[0]} by {b[0]}"
+
+
+def get_data_file_path(filename):
+    if getattr(sys, 'frozen', False):
+        # Running as bundled exe
+        base_dir = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'SlotMachineV')
+        os.makedirs(base_dir, exist_ok=True)
+        return os.path.join(base_dir, filename)
+    else:
+        # Running as script
+        return filename
+
+# Then replace every occurrence of "highscore.json" with:
+file_path = get_data_file_path("highscore.json")
 
         
 
